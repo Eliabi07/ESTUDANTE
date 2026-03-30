@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Framework de Pesquisa: Sigilo Telemático e Proteção de Dados</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Custom Styles & Tailwind Configuration */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Merriweather:wght@300;400;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f5f5f4; /* stone-100 */
+            color: #292524; /* stone-800 */
+        }
+
+        h1, h2, h3, .serif {
+            font-family: 'Merriweather', serif;
+        }
+
+        /* Chart Container Styling - MANDATORY REQUIREMENT */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px; /* Base height */
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #e7e5e4; }
+        ::-webkit-scrollbar-thumb { background: #a8a29e; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #78716c; }
+
+        .tab-btn {
+            transition: all 0.3s ease;
+        }
+        .tab-btn.active {
+            border-bottom-width: 4px;
+            border-color: #0f766e; /* teal-700 */
+            color: #0f766e;
+            font-weight: 600;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.4s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col">
+
+    <!-- Chosen Palette: Warm Neutrals with Teal (Legal/Trust) and Rose (Warning/Nullity) accents. Backgrounds use Tailwind's stone palette. -->
+    
+    <!-- Application Structure Plan: The SPA uses a dashboard/tabbed interface. This structure was chosen because the source report is a structured research prompt with distinct thematic axes. Presenting them as tabs allows the user to focus on one specific area of legal theory at a time without being overwhelmed by a massive wall of text. The flow moves logically from the broad regulatory framework (LGPD/MCI) to specific rules (Sigilo), then to limitations (Limites), and finally to practical application (Jurisprudência). -->
+    
+    <!-- Visualization & Content Choices: 
+         - Goal: Compare rigor of protection -> Viz: Bar Chart (Chart.js) -> Interaction: Hover for details -> Justification: Visually demonstrates the 'Dica de Especialista' regarding different data types.
+         - Goal: Detail Legal Concepts -> Viz: Expandable Accordions/Cards (HTML/JS) -> Interaction: Click to expand -> Justification: Keeps interface clean while allowing deep dives into complex topics like 'Fishing Expedition'.
+         - Goal: Structure Jurisprudence -> Viz: Grid of styled cards -> Interaction: Visual scanning -> Justification: Provides a clear template for the requested research outputs.
+         - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. HTML unicode and CSS used for iconography. -->
+
+    <!-- Header -->
+    <header class="bg-stone-900 text-stone-50 py-8 px-4 shadow-md z-10">
+        <div class="max-w-6xl mx-auto">
+            <div class="flex items-center gap-3 mb-2">
+                <span class="text-3xl">⚖️</span>
+                <p class="text-teal-400 font-semibold uppercase tracking-wider text-sm">Framework Interativo de Pesquisa</p>
+            </div>
+            <h1 class="text-3xl md:text-5xl font-bold mb-4">Intersecção: LGPD, MCI e Quebra de Sigilo</h1>
+            <p class="text-stone-300 max-w-3xl text-lg">
+                Um guia interativo para orientar a pesquisa exaustiva sobre a jurisprudência dos Tribunais Superiores (STF/STJ) na era digital. Explore os eixos temáticos abaixo.
+            </p>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <div class="bg-stone-50 border-b border-stone-300 sticky top-0 z-20 shadow-sm overflow-x-auto">
+        <div class="max-w-6xl mx-auto px-4 flex space-x-1 md:space-x-4 min-w-max">
+            <button onclick="switchTab('tab-regulamento')" id="btn-tab-regulamento" class="tab-btn active px-4 py-4 text-stone-600 hover:text-teal-700 whitespace-nowrap">
+                I. Marco Regulatório
+            </button>
+            <button onclick="switchTab('tab-sigilo')" id="btn-tab-sigilo" class="tab-btn px-4 py-4 text-stone-600 hover:text-teal-700 whitespace-nowrap">
+                II. Sigilo e Jurisdição
+            </button>
+            <button onclick="switchTab('tab-limites')" id="btn-tab-limites" class="tab-btn px-4 py-4 text-stone-600 hover:text-teal-700 whitespace-nowrap">
+                III. Limites da Ordem
+            </button>
+            <button onclick="switchTab('tab-jurisprudencia')" id="btn-tab-jurisprudencia" class="tab-btn px-4 py-4 text-stone-600 hover:text-teal-700 whitespace-nowrap">
+                IV. Precedentes (STF/STJ)
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow max-w-6xl mx-auto w-full p-4 md:p-8">
+
+        <!-- TAB 1: Marco Regulatório -->
+        <section id="tab-regulamento" class="content-section fade-in block">
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-stone-800 mb-2 border-b-2 border-teal-600 pb-2 inline-block">I. A Complementaridade Legislativa</h2>
+                <p class="text-stone-600 mt-2">Nesta seção, analisa-se como o Marco Civil da Internet (Lei 12.965/14) estabelece a base para o ambiente virtual e como a LGPD (Lei 13.709/18) atua sobrepujando a proteção de dados pessoais e sensíveis. Clique nos cards para detalhes.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Card MCI -->
+                <div class="bg-white rounded-xl p-6 shadow-sm border border-stone-200 hover:shadow-md transition cursor-pointer" onclick="toggleDetails('detalhes-mci')">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <span class="text-4xl text-blue-600">🌐</span>
+                            <h3 class="text-xl font-bold text-stone-800">Marco Civil da Internet</h3>
+                        </div>
+                        <span class="text-stone-400 text-sm border px-2 py-1 rounded">Lei 12.965/14</span>
+                    </div>
+                    <p class="text-stone-600 mb-4">Foco nos direitos, garantias e deveres para o uso da Internet no Brasil. Essencial para regras de guarda de logs.</p>
+                    <div id="detalhes-mci" class="hidden mt-4 pt-4 border-t border-stone-100 text-sm text-stone-700">
+                        <ul class="list-disc pl-5 space-y-2">
+                            <li><strong>Guarda de Logs:</strong> Obrigatoriedade de retenção de registros de conexão e de acesso a aplicações.</li>
+                            <li><strong>Responsabilidade:</strong> Provedores necessitam de ordem judicial específica para quebra de sigilo (Art. 10 e ss).</li>
+                        </ul>
+                    </div>
+                    <p class="text-xs text-teal-600 mt-4 text-center">Clique para ver mais</p>
+                </div>
+
+                <!-- Card LGPD -->
+                <div class="bg-white rounded-xl p-6 shadow-sm border border-stone-200 hover:shadow-md transition cursor-pointer" onclick="toggleDetails('detalhes-lgpd')">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <span class="text-4xl text-teal-600">🛡️</span>
+                            <h3 class="text-xl font-bold text-stone-800">LGPD</h3>
+                        </div>
+                        <span class="text-stone-400 text-sm border px-2 py-1 rounded">Lei 13.709/18</span>
+                    </div>
+                    <p class="text-stone-600 mb-4">Foco na proteção de dados pessoais, inclusive nos meios digitais, por pessoa natural ou jurídica.</p>
+                    <div id="detalhes-lgpd" class="hidden mt-4 pt-4 border-t border-stone-100 text-sm text-stone-700">
+                        <ul class="list-disc pl-5 space-y-2">
+                            <li><strong>Dados Sensíveis:</strong> Maior rigor no tratamento de dados que revelem origem, convicções, biometria (Art. 11).</li>
+                            <li><strong>Direitos dos Titulares:</strong> Acesso, correção, anonimização e portabilidade, aplicáveis também em investigações dentro dos limites legais.</li>
+                        </ul>
+                    </div>
+                    <p class="text-xs text-teal-600 mt-4 text-center">Clique para ver mais</p>
+                </div>
+            </div>
+
+            <div class="mt-8 bg-stone-100 p-6 rounded-lg border-l-4 border-teal-600 text-stone-700">
+                <p><strong>Foco da Pesquisa:</strong> A pesquisa deve focar na intersecção: Como a jurisprudência trata a requisição de <em>logs</em> de acesso (MCI) quando estes contêm dados que podem ser classificados como sensíveis ou identificadores diretos (LGPD)?</p>
+            </div>
+        </section>
+
+        <!-- TAB 2: Sigilo e Jurisdição -->
+        <section id="tab-sigilo" class="content-section fade-in hidden">
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-stone-800 mb-2 border-b-2 border-teal-600 pb-2 inline-block">II. Regime do Sigilo e Reserva de Jurisdição</h2>
+                <p class="text-stone-600 mt-2">Explore a natureza jurídica da quebra de sigilo. A cláusula de reserva de jurisdição não é homogênea: há distinção crítica entre dados cadastrais e conteúdo de comunicações, vital para evitar a nulidade das provas.</p>
+            </div>
+
+            <!-- Conceptual Data Visualization Structure -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center mb-12">
+                <div>
+                    <h3 class="text-lg font-bold text-stone-800 mb-4">Nível de Rigor vs. Tipo de Dado</h3>
+                    <p class="text-stone-600 text-sm mb-4">O gráfico conceitual demonstra como a necessidade de intervenção judicial (rigor de proteção) aumenta conforme a profundidade do dado solicitado.</p>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-stone-200">
+                        <div class="chart-container">
+                            <canvas id="rigorChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-4">
+                    <h3 class="text-lg font-bold text-stone-800">Dica de Especialista: A Distinção Clássica</h3>
+                    
+                    <!-- Interactive Blocks -->
+                    <div class="flex flex-col md:flex-row gap-4">
+                        <div class="flex-1 bg-white border border-stone-200 rounded-lg p-5 hover:border-blue-400 transition cursor-pointer" onmouseover="highlightChart(0)" onmouseout="resetChart()">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="text-blue-600 text-xl">📁</span>
+                                <h4 class="font-bold text-stone-800">Dados Cadastrais</h4>
+                            </div>
+                            <p class="text-xs text-stone-500 mb-2">Nome, CPF, Endereço, Filiação.</p>
+                            <div class="bg-blue-50 text-blue-800 text-xs px-2 py-1 rounded inline-block font-semibold mb-2">Exceção à Reserva</div>
+                            <p class="text-sm text-stone-700">Autoridades administrativas (Delegados e MP) podem requisitar <strong>diretamente</strong> em investigações de certos crimes, sem ordem judicial prévia (ex: lavagem de dinheiro, organizações criminosas).</p>
+                        </div>
+
+                        <div class="flex-1 bg-white border border-rose-200 rounded-lg p-5 shadow-[0_0_15px_rgba(225,29,72,0.1)] hover:border-rose-400 transition cursor-pointer" onmouseover="highlightChart(2)" onmouseout="resetChart()">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="text-rose-600 text-xl">💬</span>
+                                <h4 class="font-bold text-stone-800">Conteúdo de Comunicação</h4>
+                            </div>
+                            <p class="text-xs text-stone-500 mb-2">Mensagens de WhatsApp, Áudios, E-mails.</p>
+                            <div class="bg-rose-100 text-rose-800 text-xs px-2 py-1 rounded inline-block font-semibold mb-2">Reserva Absoluta</div>
+                            <p class="text-sm text-stone-700">Exige <strong>ordem judicial prévia e fundamentada</strong>. O acesso direto pela autoridade policial (ex: pegar celular apreendido sem ordem) gera nulidade absoluta das provas obtidas.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: Limites -->
+        <section id="tab-limites" class="content-section fade-in hidden">
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-stone-800 mb-2 border-b-2 border-teal-600 pb-2 inline-block">III. Limites da Ordem Judicial e Abusos</h2>
+                <p class="text-stone-600 mt-2">A ordem judicial não é um "cheque em branco". Explore as restrições e as teses de defesa comuns relacionadas à amplitude das requisições de dados em ambientes como nuvem e aplicativos de mensagens.</p>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden">
+                <!-- Accordion Item 1 -->
+                <div class="border-b border-stone-200">
+                    <button class="w-full px-6 py-4 text-left flex justify-between items-center bg-stone-50 hover:bg-stone-100 transition focus:outline-none" onclick="toggleAccordion('acc1', 'icon1')">
+                        <span class="font-bold text-stone-800 text-lg flex items-center gap-2"><span class="text-rose-600">🎣</span> Pescaria Probatória (Fishing Expedition)</span>
+                        <span id="icon1" class="text-stone-500 transform transition-transform duration-200">▼</span>
+                    </button>
+                    <div id="acc1" class="hidden px-6 py-4 bg-white text-stone-700">
+                        <p class="mb-3">Prática ilegal caracterizada pela busca especulativa e indiscriminada de provas, sem causa provável ou alvo definido, na esperança de "pescar" alguma evidência de crime.</p>
+                        <p><strong>Impacto Jurisprudencial:</strong> Tribunais Superiores têm anulado provas obtidas mediante acesso genérico a dispositivos ou nuvens quando a ordem judicial não delimita claramente o escopo, o período ou os suspeitos envolvidos.</p>
+                    </div>
+                </div>
+
+                <!-- Accordion Item 2 -->
+                <div class="border-b border-stone-200">
+                    <button class="w-full px-6 py-4 text-left flex justify-between items-center bg-stone-50 hover:bg-stone-100 transition focus:outline-none" onclick="toggleAccordion('acc2', 'icon2')">
+                        <span class="font-bold text-stone-800 text-lg flex items-center gap-2"><span class="text-teal-600">🎯</span> Especificidade do Objeto</span>
+                        <span id="icon2" class="text-stone-500 transform transition-transform duration-200">▼</span>
+                    </button>
+                    <div id="acc2" class="hidden px-6 py-4 bg-white text-stone-700">
+                        <p class="mb-3">A antítese da pescaria. A quebra de sigilo deve indicar com precisão quem é o alvo, qual o período investigado e que tipo de dados são estritamente necessários para a investigação.</p>
+                        <p><strong>Exemplo Prático:</strong> Ao invés de "acesso a todo o backup do WhatsApp", a ordem deve especificar "mensagens trocadas entre os contatos X e Y no período de Jan-Mar de 2023".</p>
+                    </div>
+                </div>
+
+                <!-- Accordion Item 3 -->
+                <div>
+                    <button class="w-full px-6 py-4 text-left flex justify-between items-center bg-stone-50 hover:bg-stone-100 transition focus:outline-none" onclick="toggleAccordion('acc3', 'icon3')">
+                        <span class="font-bold text-stone-800 text-lg flex items-center gap-2"><span class="text-purple-600">☁️</span> Extensão a Dados em Nuvem</span>
+                        <span id="icon3" class="text-stone-500 transform transition-transform duration-200">▼</span>
+                    </button>
+                    <div id="acc3" class="hidden px-6 py-4 bg-white text-stone-700">
+                        <p class="mb-3">Debate atual sobre se a apreensão física de um smartphone (com ordem judicial) autoriza automaticamente o acesso aos dados espelhados na nuvem (iCloud, Google Drive) vinculados àquele aparelho.</p>
+                        <p><strong>Ponto de Atenção:</strong> Parte da jurisprudência entende que o acesso à nuvem configura nova quebra de sigilo telemático, exigindo autorização específica, pois os dados não estão fisicamente no aparelho.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 4: Jurisprudência -->
+        <section id="tab-jurisprudencia" class="content-section fade-in hidden">
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-stone-800 mb-2 border-b-2 border-teal-600 pb-2 inline-block">IV. Tabela de Precedentes Relevantes</h2>
+                <p class="text-stone-600 mt-2">Estrutura exigida para o relatório da pesquisa. Ao identificar <em>Leading Cases</em>, os dados devem ser organizados seguindo este formato para facilitar a aplicação prática na defesa ou acusação.</p>
+            </div>
+
+            <!-- Example Cards of Precedents -->
+            <div class="space-y-6">
+                <!-- Precedent 1 -->
+                <div class="bg-white border-l-4 border-rose-500 rounded-r-xl shadow-md p-6 relative">
+                    <div class="absolute top-4 right-4 bg-stone-100 text-stone-500 text-xs px-2 py-1 rounded border border-stone-200">Exemplo Estrutural 1</div>
+                    <div class="flex flex-col md:flex-row gap-4 mb-4">
+                        <div class="md:w-1/4">
+                            <h4 class="text-xs uppercase tracking-wide text-stone-500 font-bold mb-1">Identificação</h4>
+                            <p class="text-sm font-bold text-stone-800">STJ - RHC 99.735/SC</p>
+                            <p class="text-xs text-stone-600">Rel. Min. Laurita Vaz</p>
+                            <p class="text-xs text-stone-600">Ano: 2018</p>
+                        </div>
+                        <div class="md:w-3/4">
+                            <h4 class="text-xs uppercase tracking-wide text-stone-500 font-bold mb-1">Tese Jurídica</h4>
+                            <p class="text-lg font-serif font-bold text-stone-900 leading-tight">Ilegalidade do acesso direto a mensagens de WhatsApp em celular apreendido sem ordem judicial.</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-stone-50 p-4 rounded text-sm">
+                        <div>
+                            <span class="font-bold text-stone-700 block mb-1">Contexto & Ratio Decidendi:</span>
+                            <p class="text-stone-600">Polícia prendeu em flagrante e acessou as mensagens do aparelho imediatamente. O STJ equiparou as mensagens de WhatsApp à comunicação telefônica (proteção constitucional), exigindo reserva de jurisdição.</p>
+                        </div>
+                        <div>
+                            <span class="font-bold text-stone-700 block mb-1">Impacto Prático:</span>
+                            <p class="text-rose-700 font-semibold block mb-1">Nulidade das provas.</p>
+                            <p class="text-stone-600">Todas as provas derivadas do acesso inicial ilegal ao celular foram consideradas contaminadas (teoria dos frutos da árvore envenenada), resultando no trancamento da ação penal.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Precedent 2 -->
+                <div class="bg-white border-l-4 border-teal-500 rounded-r-xl shadow-md p-6 relative">
+                    <div class="absolute top-4 right-4 bg-stone-100 text-stone-500 text-xs px-2 py-1 rounded border border-stone-200">Exemplo Estrutural 2</div>
+                    <div class="flex flex-col md:flex-row gap-4 mb-4">
+                        <div class="md:w-1/4">
+                            <h4 class="text-xs uppercase tracking-wide text-stone-500 font-bold mb-1">Identificação</h4>
+                            <p class="text-sm font-bold text-stone-800">STJ - HC 656.126/SP</p>
+                            <p class="text-xs text-stone-600">Rel. Min. Rogerio Schietti</p>
+                            <p class="text-xs text-stone-600">Ano: 2021</p>
+                        </div>
+                        <div class="md:w-3/4">
+                            <h4 class="text-xs uppercase tracking-wide text-stone-500 font-bold mb-1">Tese Jurídica</h4>
+                            <p class="text-lg font-serif font-bold text-stone-900 leading-tight">Validade do acesso a dados cadastrais por autoridade policial independente de ordem judicial (exceção).</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-stone-50 p-4 rounded text-sm">
+                        <div>
+                            <span class="font-bold text-stone-700 block mb-1">Contexto & Ratio Decidendi:</span>
+                            <p class="text-stone-600">Delegado requereu à operadora apenas dados de qualificação (nome, endereço) vinculados a um IP investigado. O STJ confirmou que dados cadastrais não estão acobertados pelo sigilo telemático em seu grau máximo.</p>
+                        </div>
+                        <div>
+                            <span class="font-bold text-stone-700 block mb-1">Impacto Prático:</span>
+                            <p class="text-teal-700 font-semibold block mb-1">Manutenção da prova.</p>
+                            <p class="text-stone-600">A investigação baseada na identificação do usuário pelo IP e dados cadastrais foi mantida válida, permitindo o prosseguimento da ação.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-stone-900 text-stone-400 py-6 text-center text-sm border-t border-stone-800 mt-auto">
+        <div class="max-w-6xl mx-auto px-4">
+            <p>Framework Interativo desenvolvido para análise e estruturação de pesquisa em Direito Digital e Processo Penal.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // --- Tab Navigation Logic ---
+        function switchTab(tabId) {
+            // Hide all sections
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.add('hidden');
+                section.classList.remove('block');
+            });
+            // Remove active class from all buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Show selected section
+            const activeSection = document.getElementById(tabId);
+            activeSection.classList.remove('hidden');
+            activeSection.classList.add('block');
+            
+            // Add active class to clicked button
+            document.getElementById('btn-' + tabId).classList.add('active');
+
+            // Render chart if Sigilo tab is opened
+            if(tabId === 'tab-sigilo' && !window.myChart) {
+                initChart();
+            }
+        }
+
+        // --- Accordion Logic (Tab 3) ---
+        function toggleAccordion(contentId, iconId) {
+            const content = document.getElementById(contentId);
+            const icon = document.getElementById(iconId);
+            
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                content.classList.add('hidden');
+                icon.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        // --- Simple Toggle Details (Tab 1) ---
+        function toggleDetails(elementId) {
+            const el = document.getElementById(elementId);
+            if(el.classList.contains('hidden')){
+                el.classList.remove('hidden');
+            } else {
+                el.classList.add('hidden');
+            }
+        }
+
+        // --- Chart.js Implementation (Conceptual Visualization) ---
+        let myChart = null;
+        
+        function initChart() {
+            const ctx = document.getElementById('rigorChart').getContext('2d');
+            
+            const data = {
+                labels: ['Dados Cadastrais', 'Logs de Conexão/Acesso', 'Conteúdo (Mensagens)'],
+                datasets: [{
+                    label: 'Nível de Exigência (Reserva de Jurisdição)',
+                    data: [20, 60, 100],
+                    backgroundColor: [
+                        'rgba(37, 99, 235, 0.6)',  // Blue-600
+                        'rgba(234, 179, 8, 0.6)',  // Yellow-500
+                        'rgba(225, 29, 72, 0.8)'   // Rose-600
+                    ],
+                    borderColor: [
+                        'rgba(37, 99, 235, 1)',
+                        'rgba(234, 179, 8, 1)',
+                        'rgba(225, 29, 72, 1)'
+                    ],
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            };
+
+            const config = {
+                type: 'bar',
+                data: data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, // CRITICAL for chart-container logic
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if(context.dataIndex === 0) return 'Exceção Legal (Req. Direta)';
+                                    if(context.dataIndex === 1) return 'Ordem Judicial (Regra MCI)';
+                                    if(context.dataIndex === 2) return 'Ordem Judicial Absoluta';
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 110,
+                            ticks: {
+                                display: false // Hide numerical values, keep it conceptual
+                            },
+                            grid: {
+                                display: false
+                            },
+                            title: {
+                                display: true,
+                                text: 'Rigor Protetivo',
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                callback: function(value, index, values) {
+                                    // Custom label wrapping (16-char logic adaptation)
+                                    let label = this.getLabelForValue(value);
+                                    if (label.length > 15) {
+                                        let words = label.split(' ');
+                                        let lines = [];
+                                        let currentLine = '';
+                                        words.forEach(word => {
+                                            if ((currentLine + word).length > 15) {
+                                                lines.push(currentLine.trim());
+                                                currentLine = word + ' ';
+                                            } else {
+                                                currentLine += word + ' ';
+                                            }
+                                        });
+                                        lines.push(currentLine.trim());
+                                        return lines;
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 1500,
+                        easing: 'easeOutQuart'
+                    }
+                }
+            };
+
+            window.myChart = new Chart(ctx, config);
+        }
+
+        // Functions to interact with chart from DOM elements
+        function highlightChart(index) {
+            if(window.myChart) {
+                // Dim all
+                const bgColors = window.myChart.data.datasets[0].backgroundColor.map(color => color.replace('0.8', '0.2').replace('0.6', '0.2'));
+                // Highlight target
+                if(index === 0) bgColors[0] = 'rgba(37, 99, 235, 1)';
+                if(index === 2) bgColors[2] = 'rgba(225, 29, 72, 1)';
+                
+                window.myChart.data.datasets[0].backgroundColor = bgColors;
+                window.myChart.update();
+            }
+        }
+
+        function resetChart() {
+             if(window.myChart) {
+                window.myChart.data.datasets[0].backgroundColor = [
+                    'rgba(37, 99, 235, 0.6)',
+                    'rgba(234, 179, 8, 0.6)',
+                    'rgba(225, 29, 72, 0.8)'
+                ];
+                window.myChart.update();
+            }
+        }
+
+        // Initialize first state
+        document.addEventListener('DOMContentLoaded', () => {
+            // Optional: Any initialization beyond tab defaults
+        });
+    </script>
+</body>
+</html>
